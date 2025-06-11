@@ -1,16 +1,44 @@
 #include "funciones.h"
 
-void limpiarBufferEntrada() {
+struct Buffer {
     int c;
-    while ((c = getchar()) != '\n' && c);
+};
+
+struct CadenaInput {
+    char buffer[100];
+    size_t len;
+};
+
+struct EnteroInput {
+    char buffer[100];
+    int valor;
+    char extra;
+};
+
+struct Confirmacion {
+    char opcion;
+};
+
+struct Busqueda { 
+    int i;
+};
+
+
+void limpiarBufferEntrada() {
+    struct Buffer buffer;
+    while ((buffer.c = getchar()) != '\n'); 
 }
 
 int leerCadenaValida(const char mensaje[], char destino[], int longitudMax) {
+    struct CadenaInput input;
+    
     printf("%s", mensaje);
     if (fgets(destino, longitudMax, stdin) != NULL) {
-        size_t len = strlen(destino);
-        if (len > 0 && destino[len-1] == '\n') {
-            destino[len-1] = '\0';
+        input.len = strlen(destino);
+        if (input.len > 0 && destino[input.len-1] == '\n') {
+            destino[input.len-1] = '\0';
+        } else {
+            limpiarBufferEntrada();
         }
         
         if (strlen(destino) == 0) {
@@ -25,78 +53,109 @@ int leerCadenaValida(const char mensaje[], char destino[], int longitudMax) {
 }
 
 int leerEntero(const char mensaje[]) {
-    char buffer[100];
-    int valor;
-    char extra;
+    struct EnteroInput input;
     
     while (1) {
         printf("%s", mensaje);
-        if (fgets(buffer, sizeof(buffer), stdin) != NULL) {
-            if (sscanf(buffer, "%d %c", &valor, &extra) == 1) {
-                return valor;
+        if (fgets(input.buffer, sizeof(input.buffer), stdin) != NULL) {
+            if (sscanf(input.buffer, "%d %c", &input.valor, &input.extra) == 1) {
+                return input.valor;
             }
         }
         printf("Error: Entrada invalida. Ingrese un numero entero valido.\n");
-        limpiarBufferEntrada();
     }
 }
 
 int leerEnteroPositivo(const char mensaje[]) {
-    int valor;
+    struct EnteroInput input; 
     do {
-        valor = leerEntero(mensaje);
-        if (valor <= 0) {
+        input.valor = leerEntero(mensaje);
+        if (input.valor <= 0) {
             printf("Error: El valor debe ser positivo. Intente de nuevo.\n");
         }
-    } while (valor <= 0);
-    return valor;
+    } while (input.valor <= 0);
+    return input.valor;
 }
 
 int leerEnteroEntreLimites(const char mensaje[], int min, int max) {
-    int valor;
+    struct EnteroInput input; 
     do {
-        valor = leerEntero(mensaje);
-        if (valor < min || valor > max) {
+        input.valor = leerEntero(mensaje);
+        if (input.valor < min || input.valor > max) {
             printf("Error: El valor debe estar entre %d y %d. Intente de nuevo.\n", min, max);
         }
-    } while (valor < min || valor > max);
-    return valor;
+    } while (input.valor < min || input.valor > max);
+    return input.valor;
 }
 
 int confirmarAccion(const char mensaje[]) {
-    char opcion;
+    struct Confirmacion conf;
     do {
         printf("%s (s/n): ", mensaje);
-        opcion = getchar();  
-        limpiarBufferEntrada();
+        conf.opcion = getchar();    
+        limpiarBufferEntrada();     
 
-        if (opcion >= 'A' && opcion <= 'Z') {
-            opcion = opcion + ('a' - 'A'); 
+        if (conf.opcion >= 'A' && conf.opcion <= 'Z') {
+            conf.opcion = conf.opcion + ('a' - 'A'); 
         }
         
-        if (opcion != 's' && opcion != 'n') {
+        if (conf.opcion != 's' && conf.opcion != 'n') {
             printf("Error: Ingrese 's' para si o 'n' para no.\n");
         }
-    } while (opcion != 's' && opcion != 'n');
-    return (opcion == 's');
+    } while (conf.opcion != 's' && conf.opcion != 'n');
+    return (conf.opcion == 's');
 }
 
-int buscarLibroPorId(Libro libros[], int numLibros, int id) {
+int buscarLibroPorId(struct Libro libros[], int numLibros, int id) {
     for (int i = 0; i < numLibros; i++) {
         if (libros[i].id == id) return i;
     }
     return -1;
 }
 
-int buscarLibroPorTitulo(Libro libros[], int numLibros, const char titulo[]) {
+int buscarLibroPorTitulo(struct Libro libros[], int numLibros, const char titulo[]) {
     for (int i = 0; i < numLibros; i++) {
         if (strcmp(libros[i].titulo, titulo) == 0) return i;
     }
     return -1;
 }
 
+struct Libro *buscarLibroPorAutor(struct Libro libros[], int numLibros, const char autorBuscar[]) {
+    for (int i = 0; i < numLibros; i++) {
+        if (strcmp(libros[i].autor, autorBuscar) == 0) {
+            return &libros[i]; 
+        }
+    }
+    return NULL; 
+}
+
+struct Libro *buscarLibroPorIdPtr(struct Libro libros[], int numLibros, int id) {
+    for (int i = 0; i < numLibros; i++) {
+        if (libros[i].id == id) {
+            return &libros[i]; 
+        }
+    }
+    return NULL; 
+}
+
+struct ResultadoBusquedaLibro buscarLibroCompleto(struct Libro libros[], int numLibros, int id) {
+    struct ResultadoBusquedaLibro resultado;
+    resultado.libro = NULL;
+    resultado.posicion = -1;
+    
+    for (int i = 0; i < numLibros; i++) {
+        if (libros[i].id == id) {
+            resultado.libro = &libros[i];
+            resultado.posicion = i;
+            break;
+        }
+    }
+    
+    return resultado;
+}
+
 void mostrarMenuPrincipal(const char nombreBiblioteca[], int librosRegistrados) {
-    printf("\n--- Menu Principal: Biblioteca %s ---\n", nombreBiblioteca);
+    printf("\n--- Menu Principal: Biblioteca %s ---\n", strlen(nombreBiblioteca) > 0 ? nombreBiblioteca : "[Sin Nombre]");
     printf("Libros registrados: %d/%d\n\n", librosRegistrados, MAX_LIBROS);
     printf("1. Registrar/Editar nombre biblioteca\n");
     printf("2. Registrar libros\n");
@@ -122,7 +181,7 @@ void registrarBiblioteca(char nombreBiblioteca[]) {
     printf("Nombre de la biblioteca registrado: %s\n", nombreBiblioteca);
 }
 
-void registrarLibros(Libro libros[], int *numLibros) {
+void registrarLibros(struct Libro libros[], int *numLibros) {
     printf("\n--- Registrar Libros ---\n");
     
     if (*numLibros >= MAX_LIBROS) {
@@ -143,15 +202,15 @@ void registrarLibros(Libro libros[], int *numLibros) {
     for (int i = 0; i < cantidad; i++) {
         printf("\nRegistrando libro %d de %d:\n", i+1, cantidad);
         
-        Libro nuevoLibro;
+        struct Libro nuevoLibro;
 
         int id;
         do {
             id = leerEnteroPositivo("Ingrese el ID del libro: ");
-            if (buscarLibroPorId(libros, *numLibros, id) != -1) {
+            if (buscarLibroPorIdPtr(libros, *numLibros, id) != NULL) {
                 printf("Error: Ya existe un libro con este ID. Intente con otro.\n");
             }
-        } while (buscarLibroPorId(libros, *numLibros, id) != -1);
+        } while (buscarLibroPorIdPtr(libros, *numLibros, id) != NULL);
         nuevoLibro.id = id;
 
         while (!leerCadenaValida("Ingrese el titulo del libro: ", nuevoLibro.titulo, MAX_TITULO));
@@ -160,7 +219,7 @@ void registrarLibros(Libro libros[], int *numLibros) {
 
         nuevoLibro.anio_publicacion = leerEnteroEntreLimites("Ingrese el año de publicacion (1000-2025): ", 1000, 2025);
 
-        strcpy(nuevoLibro.estado, "Disponible");
+        strcpy(nuevoLibro.estado, "Disponible"); 
 
         libros[*numLibros] = nuevoLibro;
         (*numLibros)++;
@@ -169,7 +228,7 @@ void registrarLibros(Libro libros[], int *numLibros) {
     }
 }
 
-void mostrarLibros(Libro libros[], int numLibros) {
+void mostrarLibros(struct Libro libros[], int numLibros) {
     printf("\n--- Lista de Libros ---\n");
     
     if (numLibros == 0) {
@@ -190,7 +249,7 @@ void mostrarLibros(Libro libros[], int numLibros) {
     }
 }
 
-void buscarLibro(Libro libros[], int numLibros) {
+void buscarLibro(struct Libro libros[], int numLibros) {
     printf("\n--- Buscar Libro ---\n");
     
     if (numLibros == 0) {
@@ -203,25 +262,26 @@ void buscarLibro(Libro libros[], int numLibros) {
         printf("\nComo desea buscar el libro?\n");
         printf("1. Por ID\n");
         printf("2. Por titulo\n");
+        printf("3. Por autor\n"); 
         printf("0. Cancelar\n");
-        opcion = leerEnteroEntreLimites("Ingrese su opcion: ", 0, 2);
+        opcion = leerEnteroEntreLimites("Ingrese su opcion: ", 0, 3); 
         
         switch (opcion) {
             case 1: {
                 int id = leerEnteroPositivo("Ingrese el ID del libro a buscar: ");
-                int indice = buscarLibroPorId(libros, numLibros, id);
+                struct Libro *libroEncontrado = buscarLibroPorIdPtr(libros, numLibros, id); 
                 
-                if (indice == -1) {
+                if (libroEncontrado == NULL) {
                     printf("No se encontro un libro con el ID %d.\n", id);
                 } else {
                     printf("\nInformacion del libro:\n");
-                    printf("ID: %d\n", libros[indice].id);
-                    printf("Titulo: %s\n", libros[indice].titulo);
-                    printf("Autor: %s\n", libros[indice].autor);
-                    printf("Año de publicacion: %d\n", libros[indice].anio_publicacion);
-                    printf("Estado: %s\n", libros[indice].estado);
+                    printf("ID: %d\n", libroEncontrado->id);
+                    printf("Titulo: %s\n", libroEncontrado->titulo);
+                    printf("Autor: %s\n", libroEncontrado->autor);
+                    printf("Año de publicacion: %d\n", libroEncontrado->anio_publicacion);
+                    printf("Estado: %s\n", libroEncontrado->estado);
                 }
-                return;
+                return; 
             }
             case 2: {
                 char titulo[MAX_TITULO];
@@ -239,16 +299,34 @@ void buscarLibro(Libro libros[], int numLibros) {
                     printf("Año de publicacion: %d\n", libros[indice].anio_publicacion);
                     printf("Estado: %s\n", libros[indice].estado);
                 }
-                return;
+                return; 
+            }
+            case 3: { 
+                char autor[MAX_AUTOR];
+                while (!leerCadenaValida("Ingrese el autor del libro a buscar: ", autor, MAX_AUTOR));
+
+                struct Libro *libroEncontradoPorAutor = buscarLibroPorAutor(libros, numLibros, autor);
+
+                if (libroEncontradoPorAutor == NULL) {
+                    printf("No se encontro un libro con el autor \"%s\".\n", autor);
+                } else {
+                    printf("\nInformacion del libro:\n");
+                    printf("ID: %d\n", libroEncontradoPorAutor->id);
+                    printf("Titulo: %s\n", libroEncontradoPorAutor->titulo);
+                    printf("Autor: %s\n", libroEncontradoPorAutor->autor);
+                    printf("Año de publicacion: %d\n", libroEncontradoPorAutor->anio_publicacion);
+                    printf("Estado: %s\n", libroEncontradoPorAutor->estado);
+                }
+                return; 
             }
             case 0:
                 printf("Busqueda cancelada.\n");
-                return;
+                return; 
         }
     } while (opcion != 0);
 }
 
-void actualizarEstadoLibro(Libro libros[], int numLibros) {
+void actualizarEstadoLibro(struct Libro libros[], int numLibros) {
     printf("\n--- Actualizar Estado de Libro ---\n");
     
     if (numLibros == 0) {
@@ -259,16 +337,16 @@ void actualizarEstadoLibro(Libro libros[], int numLibros) {
     mostrarLibros(libros, numLibros);
     
     int id = leerEnteroPositivo("\nIngrese el ID del libro a actualizar: ");
-    int indice = buscarLibroPorId(libros, numLibros, id);
+    struct Libro *libroAActualizar = buscarLibroPorIdPtr(libros, numLibros, id); 
     
-    if (indice == -1) {
+    if (libroAActualizar == NULL) {
         printf("No se encontro un libro con el ID %d.\n", id);
         return;
     }
     
     printf("\nLibro seleccionado:\n");
-    printf("Titulo: %s\n", libros[indice].titulo);
-    printf("Estado actual: %s\n", libros[indice].estado);
+    printf("Titulo: %s\n", libroAActualizar->titulo);
+    printf("Estado actual: %s\n", libroAActualizar->estado);
     
     printf("\nSeleccione el nuevo estado:\n");
     printf("1. Disponible\n");
@@ -279,11 +357,11 @@ void actualizarEstadoLibro(Libro libros[], int numLibros) {
     
     switch (opcion) {
         case 1:
-            strcpy(libros[indice].estado, "Disponible");
+            strcpy(libroAActualizar->estado, "Disponible");
             printf("Estado actualizado a \"Disponible\".\n");
             break;
         case 2:
-            strcpy(libros[indice].estado, "Prestado");
+            strcpy(libroAActualizar->estado, "Prestado");
             printf("Estado actualizado a \"Prestado\".\n");
             break;
         case 0:
@@ -292,7 +370,7 @@ void actualizarEstadoLibro(Libro libros[], int numLibros) {
     }
 }
 
-void eliminarLibro(Libro libros[], int *numLibros) {
+void eliminarLibro(struct Libro libros[], int *numLibros) {
     printf("\n--- Eliminar Libro ---\n");
     
     if (*numLibros == 0) {
@@ -303,7 +381,7 @@ void eliminarLibro(Libro libros[], int *numLibros) {
     mostrarLibros(libros, *numLibros);
     
     int id = leerEnteroPositivo("\nIngrese el ID del libro a eliminar: ");
-    int indice = buscarLibroPorId(libros, *numLibros, id);
+    int indice = buscarLibroPorId(libros, *numLibros, id); 
     
     if (indice == -1) {
         printf("No se encontro un libro con el ID %d.\n", id);
@@ -336,7 +414,7 @@ void editarNombreBiblioteca(char nombreBiblioteca[]) {
     printf("Nombre de la biblioteca cambiado de \"%s\" a \"%s\".\n", nombreAnterior, nombreBiblioteca);
 }
 
-void editarTituloLibro(Libro libros[], int numLibros) {
+void editarTituloLibro(struct Libro libros[], int numLibros) {
     printf("\n--- Editar Titulo de Libro ---\n");
     
     if (numLibros == 0) {
@@ -347,24 +425,24 @@ void editarTituloLibro(Libro libros[], int numLibros) {
     mostrarLibros(libros, numLibros);
     
     int id = leerEnteroPositivo("\nIngrese el ID del libro a editar: ");
-    int indice = buscarLibroPorId(libros, numLibros, id);
+    struct Libro *libroAEditar = buscarLibroPorIdPtr(libros, numLibros, id); 
     
-    if (indice == -1) {
+    if (libroAEditar == NULL) {
         printf("No se encontro un libro con el ID %d.\n", id);
         return;
     }
     
     printf("\nLibro seleccionado:\n");
-    printf("Titulo actual: %s\n", libros[indice].titulo);
+    printf("Titulo actual: %s\n", libroAEditar->titulo);
     
     char nuevoTitulo[MAX_TITULO];
     while (!leerCadenaValida("Ingrese el nuevo titulo: ", nuevoTitulo, MAX_TITULO));
     
-    printf("Titulo cambiado de \"%s\" a \"%s\".\n", libros[indice].titulo, nuevoTitulo);
-    strcpy(libros[indice].titulo, nuevoTitulo);
+    printf("Titulo cambiado de \"%s\" a \"%s\".\n", libroAEditar->titulo, nuevoTitulo);
+    strcpy(libroAEditar->titulo, nuevoTitulo);
 }
 
-void editarAutorLibro(Libro libros[], int numLibros) {
+void editarAutorLibro(struct Libro libros[], int numLibros) {
     printf("\n--- Editar Autor de Libro ---\n");
     
     if (numLibros == 0) {
@@ -375,24 +453,24 @@ void editarAutorLibro(Libro libros[], int numLibros) {
     mostrarLibros(libros, numLibros);
     
     int id = leerEnteroPositivo("\nIngrese el ID del libro a editar: ");
-    int indice = buscarLibroPorId(libros, numLibros, id);
+    struct Libro *libroAEditar = buscarLibroPorIdPtr(libros, numLibros, id); 
     
-    if (indice == -1) {
+    if (libroAEditar == NULL) {
         printf("No se encontro un libro con el ID %d.\n", id);
         return;
     }
     
     printf("\nLibro seleccionado:\n");
-    printf("Autor actual: %s\n", libros[indice].autor);
+    printf("Autor actual: %s\n", libroAEditar->autor);
     
     char nuevoAutor[MAX_AUTOR];
     while (!leerCadenaValida("Ingrese el nuevo autor: ", nuevoAutor, MAX_AUTOR));
     
-    printf("Autor cambiado de \"%s\" a \"%s\".\n", libros[indice].autor, nuevoAutor);
-    strcpy(libros[indice].autor, nuevoAutor);
+    printf("Autor cambiado de \"%s\" a \"%s\".\n", libroAEditar->autor, nuevoAutor);
+    strcpy(libroAEditar->autor, nuevoAutor);
 }
 
-void editarIdLibro(Libro libros[], int numLibros) {
+void editarIdLibro(struct Libro libros[], int numLibros) {
     printf("\n--- Editar ID de Libro ---\n");
     
     if (numLibros == 0) {
@@ -403,29 +481,30 @@ void editarIdLibro(Libro libros[], int numLibros) {
     mostrarLibros(libros, numLibros);
     
     int id = leerEnteroPositivo("\nIngrese el ID del libro a editar: ");
-    int indice = buscarLibroPorId(libros, numLibros, id);
+    struct Libro *libroAEditar = buscarLibroPorIdPtr(libros, numLibros, id); 
     
-    if (indice == -1) {
+    if (libroAEditar == NULL) {
         printf("No se encontro un libro con el ID %d.\n", id);
         return;
     }
     
     printf("\nLibro seleccionado:\n");
-    printf("ID actual: %d\n", libros[indice].id);
+    printf("ID actual: %d\n", libroAEditar->id);
     
     int nuevoId;
     do {
         nuevoId = leerEnteroPositivo("Ingrese el nuevo ID: ");
-        if (buscarLibroPorId(libros, numLibros, nuevoId) != -1 && nuevoId != libros[indice].id) {
+        struct Libro *libroConNuevoId = buscarLibroPorIdPtr(libros, numLibros, nuevoId);
+        if (libroConNuevoId != NULL && libroConNuevoId != libroAEditar) {
             printf("Error: Ya existe un libro con este ID. Intente con otro.\n");
         }
-    } while (buscarLibroPorId(libros, numLibros, nuevoId) != -1 && nuevoId != libros[indice].id);
+    } while (buscarLibroPorIdPtr(libros, numLibros, nuevoId) != NULL && nuevoId != libroAEditar->id);
     
-    printf("ID cambiado de %d a %d.\n", libros[indice].id, nuevoId);
-    libros[indice].id = nuevoId;
+    printf("ID cambiado de %d a %d.\n", libroAEditar->id, nuevoId);
+    libroAEditar->id = nuevoId;
 }
 
-void editarAnioPublicacion(Libro libros[], int numLibros) {
+void editarAnioPublicacion(struct Libro libros[], int numLibros) {
     printf("\n--- Editar Año de Publicacion ---\n");
     
     if (numLibros == 0) {
@@ -436,23 +515,23 @@ void editarAnioPublicacion(Libro libros[], int numLibros) {
     mostrarLibros(libros, numLibros);
     
     int id = leerEnteroPositivo("\nIngrese el ID del libro a editar: ");
-    int indice = buscarLibroPorId(libros, numLibros, id);
+    struct Libro *libroAEditar = buscarLibroPorIdPtr(libros, numLibros, id); 
     
-    if (indice == -1) {
+    if (libroAEditar == NULL) {
         printf("No se encontro un libro con el ID %d.\n", id);
         return;
     }
     
     printf("\nLibro seleccionado:\n");
-    printf("Año de publicacion actual: %d\n", libros[indice].anio_publicacion);
+    printf("Año de publicacion actual: %d\n", libroAEditar->anio_publicacion);
     
     int nuevoAnio = leerEnteroEntreLimites("Ingrese el nuevo año de publicacion (1000-2025): ", 1000, 2025);
     
-    printf("Año de publicacion cambiado de %d a %d.\n", libros[indice].anio_publicacion, nuevoAnio);
-    libros[indice].anio_publicacion = nuevoAnio;
+    printf("Año de publicacion cambiado de %d a %d.\n", libroAEditar->anio_publicacion, nuevoAnio);
+    libroAEditar->anio_publicacion = nuevoAnio;
 }
 
-void prestarLibro(Libro libros[], int numLibros) {
+void prestarLibro(struct Libro libros[], int numLibros) {
     printf("\n--- Prestar Libro ---\n");
     
     if (numLibros == 0) {
@@ -482,31 +561,31 @@ void prestarLibro(Libro libros[], int numLibros) {
     }
     
     int id = leerEnteroPositivo("\nIngrese el ID del libro a prestar: ");
-    int indice = buscarLibroPorId(libros, numLibros, id);
+    struct Libro *libroAPrestar = buscarLibroPorIdPtr(libros, numLibros, id); 
     
-    if (indice == -1) {
+    if (libroAPrestar == NULL) {
         printf("No se encontro un libro con el ID %d.\n", id);
         return;
     }
     
-    if (strcmp(libros[indice].estado, "Prestado") == 0) {
-        printf("El libro \"%s\" ya esta prestado.\n", libros[indice].titulo);
+    if (strcmp(libroAPrestar->estado, "Prestado") == 0) {
+        printf("El libro \"%s\" ya esta prestado.\n", libroAPrestar->titulo);
         return;
     }
     
     printf("\nLibro seleccionado para prestar:\n");
-    printf("Titulo: %s\n", libros[indice].titulo);
-    printf("Autor: %s\n", libros[indice].autor);
+    printf("Titulo: %s\n", libroAPrestar->titulo);
+    printf("Autor: %s\n", libroAPrestar->autor);
     
     if (confirmarAccion("¿Confirmar prestamo del libro?")) {
-        strcpy(libros[indice].estado, "Prestado");
+        strcpy(libroAPrestar->estado, "Prestado");
         printf("Libro prestado exitosamente. Estado actualizado a \"Prestado\".\n");
     } else {
         printf("Prestamo cancelado.\n");
     }
 }
 
-void devolverLibro(Libro libros[], int numLibros) {
+void devolverLibro(struct Libro libros[], int numLibros) {
     printf("\n--- Devolver Libro ---\n");
     
     if (numLibros == 0) {
@@ -536,31 +615,31 @@ void devolverLibro(Libro libros[], int numLibros) {
     }
     
     int id = leerEnteroPositivo("\nIngrese el ID del libro a devolver: ");
-    int indice = buscarLibroPorId(libros, numLibros, id);
+    struct Libro *libroADevolver = buscarLibroPorIdPtr(libros, numLibros, id); // Usamos la versión con puntero
     
-    if (indice == -1) {
+    if (libroADevolver == NULL) {
         printf("No se encontro un libro con el ID %d.\n", id);
         return;
     }
     
-    if (strcmp(libros[indice].estado, "Disponible") == 0) {
-        printf("El libro \"%s\" ya esta disponible, no se puede devolver.\n", libros[indice].titulo);
+    if (strcmp(libroADevolver->estado, "Disponible") == 0) {
+        printf("El libro \"%s\" ya esta disponible, no se puede devolver.\n", libroADevolver->titulo);
         return;
     }
     
     printf("\nLibro seleccionado para devolver:\n");
-    printf("Titulo: %s\n", libros[indice].titulo);
-    printf("Autor: %s\n", libros[indice].autor);
+    printf("Titulo: %s\n", libroADevolver->titulo);
+    printf("Autor: %s\n", libroADevolver->autor);
     
     if (confirmarAccion("¿Confirmar devolucion del libro?")) {
-        strcpy(libros[indice].estado, "Disponible");
+        strcpy(libroADevolver->estado, "Disponible");
         printf("Libro devuelto exitosamente. Estado actualizado a \"Disponible\".\n");
     } else {
         printf("Devolucion cancelada.\n");
     }
 }
 
-void editarNombresMenu(char nombreBiblioteca[], Libro libros[], int numLibros) {
+void editarNombresMenu(char nombreBiblioteca[], struct Libro libros[], int numLibros) {
     int opcion;
     do {
         printf("\n--- Menu de Edicion de Nombres ---\n");
@@ -587,7 +666,7 @@ void editarNombresMenu(char nombreBiblioteca[], Libro libros[], int numLibros) {
     } while (opcion != 0);
 }
 
-void editarComponentesMenu(Libro libros[], int numLibros) {
+void editarComponentesMenu(struct Libro libros[], int numLibros) {
     int opcion;
     do {
         printf("\n--- Menu de Edicion de Componentes ---\n");

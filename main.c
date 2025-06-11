@@ -1,17 +1,17 @@
-#include "funciones.h"
+#include "funciones.h" 
 
 int main(int argc, char *argv[]) {
-    char nombreBiblioteca[MAX_NOMBRE_BIBLIOTECA] = "";
-    Libro libros[MAX_LIBROS];
-    int numLibros = 0;
-    
+    char nombreBiblioteca[MAX_NOMBRE_BIBLIOTECA] = ""; 
+    struct Libro libros[MAX_LIBROS]; 
+    int numLibros = 0; 
+
     printf("¡Bienvenido al Sistema de Gestion de Biblioteca!\n");
-    
+
     int opcion;
     do {
         mostrarMenuPrincipal(nombreBiblioteca, numLibros);
         opcion = leerEnteroEntreLimites("Ingrese su opcion: ", 0, 9);
-        
+
         switch (opcion) {
             case 1:
                 registrarBiblioteca(nombreBiblioteca);
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
                 } else {
                     int opcionEdicion;
                     do {
-                        printf("\nQue desea editar?\n");
+                        printf("\n¿Que desea editar?\n");
                         printf("1. Nombres (biblioteca, titulo, autor)\n");
                         printf("2. Componentes (ID, año de publicacion)\n");
                         printf("0. Volver\n");
@@ -70,14 +70,17 @@ int main(int argc, char *argv[]) {
             case 0:
                 printf("Saliendo del programa...\n");
                 break;
+            default:
+                printf("Opcion no valida. Intente de nuevo.\n");
+                break;
         }
-        
+
         if (opcion != 0) {
             printf("\nPresione Enter para continuar...");
             while (getchar() != '\n'); 
         }
-    } while (opcion != 0);
+    } while (opcion != 0); 
     
-    return 0;
+    return 0; 
 }
 
