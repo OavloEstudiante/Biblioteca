@@ -1,6 +1,6 @@
 #include "funciones.h"
 
-int main() {
+int main(int argc, char *argv[]) {
     char nombreBiblioteca[MAX_NOMBRE_BIBLIOTECA] = "";
     Libro libros[MAX_LIBROS];
     int numLibros = 0;
@@ -80,3 +80,4 @@ int main() {
     
     return 0;
 }
+

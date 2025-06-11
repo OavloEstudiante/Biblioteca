@@ -67,8 +67,12 @@ int confirmarAccion(const char mensaje[]) {
     char opcion;
     do {
         printf("%s (s/n): ", mensaje);
-        opcion = tolower(getchar());
+        opcion = getchar();  
         limpiarBufferEntrada();
+
+        if (opcion >= 'A' && opcion <= 'Z') {
+            opcion = opcion + ('a' - 'A'); 
+        }
         
         if (opcion != 's' && opcion != 'n') {
             printf("Error: Ingrese 's' para si o 'n' para no.\n");
@@ -140,8 +144,7 @@ void registrarLibros(Libro libros[], int *numLibros) {
         printf("\nRegistrando libro %d de %d:\n", i+1, cantidad);
         
         Libro nuevoLibro;
-        
-        // ID del libro
+
         int id;
         do {
             id = leerEnteroPositivo("Ingrese el ID del libro: ");
@@ -150,20 +153,15 @@ void registrarLibros(Libro libros[], int *numLibros) {
             }
         } while (buscarLibroPorId(libros, *numLibros, id) != -1);
         nuevoLibro.id = id;
-        
-        // Título del libro
+
         while (!leerCadenaValida("Ingrese el titulo del libro: ", nuevoLibro.titulo, MAX_TITULO));
-        
-        // Autor del libro
+
         while (!leerCadenaValida("Ingrese el autor del libro: ", nuevoLibro.autor, MAX_AUTOR));
-        
-        // Año de publicación
+
         nuevoLibro.anio_publicacion = leerEnteroEntreLimites("Ingrese el año de publicacion (1000-2025): ", 1000, 2025);
-        
-        // Estado (siempre disponible al registrar)
+
         strcpy(nuevoLibro.estado, "Disponible");
-        
-        // Agregar el libro al arreglo
+
         libros[*numLibros] = nuevoLibro;
         (*numLibros)++;
         

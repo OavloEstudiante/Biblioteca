@@ -1,10 +1,5 @@
-#ifndef BIBLIOTECA_H
-#define BIBLIOTECA_H
-
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
-#include <ctype.h>
 
 #define MAX_NOMBRE_BIBLIOTECA 100
 #define MAX_LIBROS 10
@@ -20,7 +15,6 @@ typedef struct {
     char estado[MAX_ESTADO];
 } Libro;
 
-// Prototipos de funciones
 void limpiarBufferEntrada();
 int leerCadenaValida(const char mensaje[], char destino[], int longitudMax);
 int leerEntero(const char mensaje[]);
@@ -46,4 +40,4 @@ void devolverLibro(Libro libros[], int numLibros);
 void editarNombresMenu(char nombreBiblioteca[], Libro libros[], int numLibros);
 void editarComponentesMenu(Libro libros[], int numLibros);
 
-#endif
+
